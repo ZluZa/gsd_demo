@@ -64,8 +64,8 @@ body{padding:0}
 .lane-0 .road{translate:-2.9cqw 0}
 .lane-1 .road{translate:2.9cqw 0}
 
-/* Keep the menu back button circular on every portrait aspect ratio. */
-.menu-screen>.back{height:auto!important;aspect-ratio:1}
+/* Keep circular controls square regardless of the screen aspect ratio. */
+.menu-screen>.back,.game-screen>.pause-button{height:auto!important;aspect-ratio:1}
 
 /* Approved gap layout: vivid road surfaces with a single clean inner edge. */
 .road{background:linear-gradient(105deg,#8beaff55,transparent 42%),linear-gradient(110deg,#438df9,#484bef 55%,#6244f5)}
