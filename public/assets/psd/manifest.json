@@ -1,0 +1,332 @@
+{
+  "menu-background": {
+    "source": "Rhythm_with_Dino_menu.psd",
+    "layer": "1/0",
+    "name": "back",
+    "bbox": [
+      -1474,
+      -486,
+      4296,
+      6349
+    ],
+    "size": [
+      720,
+      1555
+    ]
+  },
+  "logo": {
+    "source": "Rhythm_with_Dino_menu.psd",
+    "layer": "1/6",
+    "name": "logo",
+    "bbox": [
+      860,
+      753,
+      2228,
+      1276
+    ],
+    "size": [
+      1100,
+      421
+    ]
+  },
+  "menu-star": {
+    "source": "Rhythm_with_Dino_menu.psd",
+    "layer": "1/1",
+    "name": "star",
+    "bbox": [
+      989,
+      535,
+      1935,
+      1447
+    ],
+    "size": [
+      946,
+      912
+    ]
+  },
+  "crown": {
+    "source": "Rhythm_with_Dino_menu.psd",
+    "layer": "1/5/1/4/1/0",
+    "name": "crown1",
+    "bbox": [
+      572,
+      2507,
+      710,
+      2637
+    ],
+    "size": [
+      138,
+      130
+    ]
+  },
+  "win-background": {
+    "source": "Rhythm_with_Dino_win_screen.psd",
+    "layer": "1/0/0",
+    "name": "back",
+    "bbox": [
+      -842,
+      -907,
+      3944,
+      5549
+    ],
+    "size": [
+      720,
+      1555
+    ]
+  },
+  "win-star": {
+    "source": "Rhythm_with_Dino_win_screen.psd",
+    "layer": "1/0/1",
+    "name": "star_back",
+    "bbox": [
+      694,
+      1061,
+      2235,
+      2545
+    ],
+    "size": [
+      1100,
+      1059
+    ]
+  },
+  "win-dino": {
+    "source": "Rhythm_with_Dino_win_screen.psd",
+    "layer": "1/1",
+    "name": "dino",
+    "bbox": [
+      1009,
+      1186,
+      1884,
+      2337
+    ],
+    "size": [
+      836,
+      1100
+    ]
+  },
+  "ribbon-left": {
+    "source": "Rhythm_with_Dino_win_screen.psd",
+    "layer": "1/3",
+    "name": "serpentines_2",
+    "bbox": [
+      428,
+      294,
+      773,
+      785
+    ],
+    "size": [
+      345,
+      491
+    ]
+  },
+  "ribbon-right": {
+    "source": "Rhythm_with_Dino_win_screen.psd",
+    "layer": "1/4",
+    "name": "serpentines_1",
+    "bbox": [
+      2068,
+      1112,
+      2390,
+      1305
+    ],
+    "size": [
+      322,
+      193
+    ]
+  },
+  "gift": {
+    "source": "Rhythm_with_Dino_win_screen.psd",
+    "layer": "1/6/2",
+    "name": "gifft",
+    "bbox": [
+      680,
+      3562,
+      1022,
+      3900
+    ],
+    "size": [
+      342,
+      338
+    ]
+  },
+  "score-star": {
+    "source": "Rhythm_with_Dino_win_screen.psd",
+    "layer": "1/2/3/2",
+    "name": "star",
+    "bbox": [
+      1105,
+      2683,
+      1233,
+      2805
+    ],
+    "size": [
+      128,
+      122
+    ]
+  },
+  "game-background": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "1",
+    "name": "back",
+    "bbox": [
+      -1557,
+      -324,
+      4226,
+      5063
+    ],
+    "size": [
+      720,
+      1555
+    ]
+  },
+  "stage": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "8",
+    "name": "scene",
+    "bbox": [
+      -265,
+      715,
+      3195,
+      2184
+    ],
+    "size": [
+      1100,
+      467
+    ]
+  },
+  "cast": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "9/0",
+    "name": "all",
+    "bbox": [
+      485,
+      740,
+      2438,
+      1660
+    ],
+    "size": [
+      1100,
+      518
+    ]
+  },
+  "singer": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "9/1",
+    "name": "pers",
+    "bbox": [
+      1242,
+      711,
+      1730,
+      1645
+    ],
+    "size": [
+      488,
+      934
+    ]
+  },
+  "game-dino": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "9/2",
+    "name": "dino",
+    "bbox": [
+      1572,
+      1056,
+      2015,
+      1638
+    ],
+    "size": [
+      443,
+      582
+    ]
+  },
+  "sky-stars": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "6",
+    "name": "stars",
+    "bbox": [
+      356,
+      114,
+      2536,
+      1005
+    ],
+    "size": [
+      1100,
+      450
+    ]
+  },
+  "game-star": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "7",
+    "name": "star_back",
+    "bbox": [
+      1076,
+      662,
+      1864,
+      1422
+    ],
+    "size": [
+      788,
+      760
+    ]
+  },
+  "road-sparkles-blue": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "2/1",
+    "name": "blue_star",
+    "bbox": [
+      366,
+      2064,
+      1312,
+      5814
+    ],
+    "size": [
+      277,
+      1100
+    ]
+  },
+  "road-sparkles-yellow": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "3/2",
+    "name": "yellow_star",
+    "bbox": [
+      1611,
+      2162,
+      2475,
+      5977
+    ],
+    "size": [
+      249,
+      1100
+    ]
+  },
+  "target-light": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "2/6",
+    "name": "blue_star_light копия",
+    "bbox": [
+      691,
+      3134,
+      1132,
+      3767
+    ],
+    "size": [
+      441,
+      633
+    ]
+  },
+  "target-ring": {
+    "source": "Rhythm_with_Dino.psd",
+    "layer": "4",
+    "name": "circle",
+    "bbox": [
+      1382,
+      3356,
+      2635,
+      4080
+    ],
+    "size": [
+      1100,
+      636
+    ]
+  }
+}

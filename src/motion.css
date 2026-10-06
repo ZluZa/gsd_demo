@@ -1,0 +1,144 @@
+/* Gentle decorative motion: long cycles, low opacity, no repeated flashes. */
+[data-art="logo"] {
+  transform-origin:50% 58%;
+  animation:logo-sway 6.8s ease-in-out infinite;
+}
+@keyframes logo-sway { 0%,100%{rotate:-1deg} 50%{rotate:1deg} }
+.game-screen [data-art="cast"],
+.game-screen [data-art="singer"],
+.game-screen [data-art="game-dino"],
+.end-screen [data-art="win-dino"] {
+  transform-origin:50% 95%;
+  animation:character-sway 5.8s ease-in-out infinite;
+}
+.game-screen [data-art="singer"]{animation-duration:6.6s;animation-delay:-2s}
+.game-screen [data-art="game-dino"]{animation-duration:5.2s;animation-delay:-1.2s}
+@keyframes character-sway {0%,100%{rotate:-1.25deg}50%{rotate:1.25deg}}
+.menu-screen .glow-star i{animation:star-breathe 8s ease-in-out infinite}
+@keyframes star-breathe{0%,100%{opacity:.88}50%{opacity:1}}
+.menu-screen::before {
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:-1;
+  background:radial-gradient(ellipse at 50% 23%,#fff5a8 0%,#ffecc133 25%,transparent 46%);
+  opacity:0;
+}
+.menu-screen.screen-enter::before{animation:welcome-light 1.35s ease-out both}
+.menu-screen.screen-enter .glow-star{animation:welcome-star 1.2s ease-out both}
+@keyframes welcome-light{0%{opacity:0}35%{opacity:.22}100%{opacity:0}}
+@keyframes welcome-star{0%{opacity:.55;scale:.94}55%{opacity:1;scale:1.025}100%{opacity:1;scale:1}}
+.primary{overflow:hidden}
+.primary::after {
+  content:'';position:absolute;inset:-25% auto -25% -40%;width:22%;
+  background:linear-gradient(90deg,transparent,#fff5,transparent);
+  transform:translateX(0) skewX(-18deg);opacity:0;pointer-events:none;
+  animation:button-sheen 9s ease-in-out infinite;
+}
+/* Gift extends outside its button in the PSD: clip only the decorative sheen. */
+.gift-button{overflow:visible}.gift-button::after{inset:0;width:100%;border-radius:inherit;clip-path:inset(0 round 3cqw);background:linear-gradient(110deg,transparent 32%,#fff3 50%,transparent 68%);animation:gift-sheen 9s ease-in-out infinite}
+@keyframes button-sheen{0%,65%{opacity:0;transform:translateX(0) skewX(-18deg)}70%{opacity:.55}86%{opacity:.55;transform:translateX(660%) skewX(-18deg)}90%,100%{opacity:0;transform:translateX(660%) skewX(-18deg)}}
+@keyframes gift-sheen{0%,65%,90%,100%{opacity:0}76%{opacity:.3}}
+.ambient-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.ambient-particles i{position:absolute;width:.85cqw;height:.85cqw;max-width:4px;max-height:4px;border-radius:50%;background:#fff7ce;opacity:0;animation:particle-drift var(--duration) ease-in-out var(--delay) infinite}
+@keyframes particle-drift{0%,100%{opacity:0;transform:translateY(7px)}30%,65%{opacity:.28}90%{opacity:0;transform:translateY(-14px)}}
+.game-screen .ambient-particles{inset:0 0 59%}
+.road::after{content:'';position:absolute;inset:-45% 8%;pointer-events:none;background:linear-gradient(180deg,transparent 30%,#e6faff18 46%,#fff2 50%,transparent 66%);animation:road-flow 7.5s linear infinite;opacity:.5}
+.lane-1 .road::after{animation-delay:-3.7s}
+@keyframes road-flow{from{transform:translateY(-40%)}to{transform:translateY(40%)}}
+.road-shine{animation:road-breathe 6.8s ease-in-out infinite}
+.lane-1 .road-shine{animation-delay:-3.4s}
+@keyframes road-breathe{0%,100%{opacity:.45}50%{opacity:.75}}
+.road-stars{animation:road-stars-drift 10s ease-in-out infinite}
+@keyframes road-stars-drift{0%,100%{translate:0 -3px;opacity:.65}50%{translate:0 7px;opacity:.8}}
+.target::before{animation:target-light 7s ease-in-out infinite}
+.lane-1 .target::before{animation-delay:-3s}
+@keyframes target-light{0%,100%{opacity:.4}50%{opacity:.65}}
+/* Replace the earlier 1.5× brightness flash with a small physical response. */
+.pulse .target{animation:target-tap .32s ease-out}
+@keyframes target-tap{0%,100%{scale:1}35%{scale:1.025}}
+.hit-sparks{position:absolute;inset:0;pointer-events:none}
+.hit-sparks i{position:absolute;left:50%;top:36%;width:1.2cqw;height:1.2cqw;max-width:5px;max-height:5px;border-radius:50%;background:#fffbd4;opacity:0}
+.hit-feedback{opacity:0}
+.motion-suspended .screen *,.motion-suspended .screen::before,.motion-suspended .screen *::before,.motion-suspended .screen *::after{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){
+  .screen *,.screen::before,.screen *::before,.screen *::after{animation:none!important;transition:none!important}
+  .ambient-particles,.hit-sparks{display:none}
+  .hit-feedback{opacity:1}
+}
+
+/* Concentrate menu particles around the title and star, above the panels. */
+.menu-screen .ambient-particles{inset:0 0 70%;z-index:1}
+.menu-screen .ambient-particles i{width:1cqw;height:1cqw;max-width:5px;max-height:5px;animation-name:menu-particle-drift}
+.menu-screen .ambient-particles i:nth-child(3n){width:1.5cqw;height:1.5cqw;max-width:6px;max-height:6px;border-radius:0;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+@keyframes menu-particle-drift{0%,100%{opacity:0;transform:translate(0,6px)}25%,60%{opacity:.42}90%{opacity:0;transform:translate(5px,-13px)}}
+.menu-screen [data-art="logo"],.menu-screen>.back,.menu-screen>select,.menu-screen>.total{z-index:2}
+/* Independent CSS rays over the PSD background; the original art stays still. */
+.menu-light-layers{position:absolute;inset:0 0 68%;overflow:hidden;pointer-events:none;z-index:0;mask-image:linear-gradient(#000 0%,#000 72%,transparent 100%);-webkit-mask-image:linear-gradient(#000 0%,#000 72%,transparent 100%)}
+.light-ray-layer{position:absolute;left:50%;top:70%;width:180%;aspect-ratio:1;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 8deg,#fff4b2 0deg,transparent 9deg,transparent 25deg,#fff4b2 32deg);opacity:.16;mask-image:radial-gradient(circle,#000 5%,#0009 38%,transparent 69%);-webkit-mask-image:radial-gradient(circle,#000 5%,#0009 38%,transparent 69%);animation:menu-rays-left 19s ease-in-out infinite;transform-origin:50% 50%}
+.light-ray-layer:nth-child(2){background:repeating-conic-gradient(from 21deg,#ffe2ff 0deg,transparent 12deg,transparent 38deg,#ffe2ff 46deg);opacity:.11;animation:menu-rays-right 25s ease-in-out infinite}
+@keyframes menu-rays-left{0%,100%{transform:translate(-50%,-50%) rotate(-9deg)}50%{transform:translate(-50%,-50%) rotate(9deg)}}
+@keyframes menu-rays-right{0%,100%{transform:translate(-50%,-50%) rotate(12deg)}50%{transform:translate(-50%,-50%) rotate(-12deg)}}
+/* Demonstration only: no synthetic clicks, no automatic Start action. */
+.tutorial-screen .mini-lanes i{position:relative;transform-origin:center;box-shadow:0 3px 0 #259bc0;animation:tutorial-demo-press 3.2s ease-in-out 1.2s infinite}
+.tutorial-screen .mini-lanes i:nth-child(2){box-shadow:0 3px 0 #c69f24;animation-delay:2.8s}
+.tutorial-screen .mini-lanes i::after{content:'';position:absolute;inset:-4px;border:2px solid #fff9;border-radius:50%;opacity:0;animation:tutorial-tap-ring 3.2s ease-out 1.2s infinite;pointer-events:none}
+.tutorial-screen .mini-lanes i:nth-child(2)::after{animation-delay:2.8s}
+@keyframes tutorial-demo-press{0%,16%,100%{translate:0 0;scale:1}6%{translate:0 3px;scale:.95}11%{translate:0 -1px;scale:1.015}}
+@keyframes tutorial-tap-ring{0%,4%{opacity:0;scale:.93}7%{opacity:.4;scale:1}17%,100%{opacity:0;scale:1.15}}
+@media(prefers-reduced-motion:reduce){.menu-light-layers{display:none}}
+
+/* Every press has feedback, independently of whether a note was hit. */
+.target::after{content:'';position:absolute;inset:-1cqw;border:.65cqw solid #fff;border-radius:50%;opacity:0;pointer-events:none}
+.pulse .target::after{animation:target-click-ring .42s ease-out}
+@keyframes target-click-ring{0%{scale:.94;opacity:0}22%{scale:1;opacity:.48}100%{scale:1.15;opacity:0}}
+@keyframes target-tap{0%,100%{scale:1}28%{scale:.96}65%{scale:1.02}}
+@media(prefers-reduced-motion:reduce){.lane:active .target i{opacity:.65}}
+
+/* Shared ambient light stays behind content, with placement per screen. */
+.utility-screen .menu-light-layers{inset:0 0 40%}
+.result-screen .menu-light-layers{inset:0 0 36%;opacity:.6}
+.end-screen .menu-light-layers{inset:0 0 38%}
+.end-screen .light-ray-layer{top:60%}
+.game-screen .menu-light-layers{inset:0 0 58%;opacity:.8}
+.game-screen .light-ray-layer{top:65%}
+.utility-screen .ambient-particles{inset:0 0 40%}
+.result-screen .ambient-particles{inset:0 0 63%}
+.end-screen .ambient-particles{inset:0 0 48%}
+/* Different, closed drift paths: no jump when the loop restarts. */
+@keyframes particle-drift{
+  0%,100%{opacity:0;transform:translate(0,5px)}
+  25%{opacity:.28;transform:translate(calc(var(--drift-x,8px) * -.4),0)}
+  60%{opacity:.28;transform:translate(var(--drift-x,8px),var(--drift-y,-10px))}
+  85%{opacity:.12;transform:translate(calc(var(--drift-x,8px) * .4),-3px)}
+}
+@keyframes menu-particle-drift{
+  0%,100%{opacity:0;transform:translate(0,5px)}
+  25%{opacity:.42;transform:translate(calc(var(--drift-x,8px) * -.4),0)}
+  60%{opacity:.42;transform:translate(var(--drift-x,8px),var(--drift-y,-10px))}
+  85%{opacity:.15;transform:translate(calc(var(--drift-x,8px) * .4),-3px)}
+}
+.game-screen [data-art="sky-stars"]{animation:sky-stars-float 14s ease-in-out infinite}
+@keyframes sky-stars-float{0%,100%{translate:-2px 1px}50%{translate:3px -3px}}
+
+/* Tutorial keeps the procedural light and particles, without the PSD sunburst. */
+.tutorial-screen{background-image:linear-gradient(180deg,#9e64bf 0%,#8746bd 35%,#6420b7 65%,#4b00b0 100%)}
+.victory-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+.victory-confetti i{position:absolute;top:0;width:1.25cqw;height:2.1cqw;max-width:6px;max-height:10px;border-radius:1px;opacity:0}
+.end-screen .end-board,.end-screen .gift-button{z-index:4}
+@media(prefers-reduced-motion:reduce){.victory-confetti{display:none}}
+
+/* PSD sparkle strips scroll together, clipped to each road's perspective. */
+.road-stream{position:absolute;inset:0 8%;pointer-events:none;opacity:.65;mask-image:linear-gradient(transparent,#000 12%,#000 85%,transparent)}
+.road-stream i{position:absolute;inset:0;background:url('../public/assets/psd/road-sparkles-blue.webp') center/100% 100% no-repeat;animation:road-stream-down 6s linear infinite}
+.road-stream i:nth-child(2){top:-100%;bottom:100%}
+.lane-1 .road-stream i{background-image:url('../public/assets/psd/road-sparkles-yellow.webp');animation-delay:-3s}
+@keyframes road-stream-down{from{transform:translateY(0)}to{transform:translateY(100%)}}
+.hit-feedback{position:absolute;left:4%;width:92%;top:44%;z-index:7;text-align:center;pointer-events:none;color:#fff;font-size:6.5cqw;line-height:1.2;font-weight:800;paint-order:stroke fill;-webkit-text-stroke:.3cqw #7734af;text-shadow:0 .5cqw 1cqw #40117766}
+/* The original PSD beam and ring add light locally, without a screen flash. */
+.target::before{display:none}
+.target-beam{position:absolute;width:20cqw;height:28.7cqw;bottom:4.5cqw;left:50%;transform:translateX(-50%);background:url('../public/assets/psd/target-light.webp') center/contain no-repeat;opacity:.2;pointer-events:none}
+.target-halo{position:absolute;inset:-4cqw;pointer-events:none;background:url('../public/assets/psd/target-ring.webp') center/100% 100% no-repeat;opacity:0;filter:drop-shadow(0 0 2cqw #7df5ff)}
+.lane-1 .target-halo{filter:drop-shadow(0 0 2cqw #fff291)}
+.pulse .target-beam{animation:press-beam .62s ease-out}
+.pulse .target-halo{animation:press-halo .62s ease-out}
+@keyframes press-beam{0%{opacity:.2;scale:1}20%{opacity:.85;scale:1.04}100%{opacity:.2;scale:1}}
+@keyframes press-halo{0%{opacity:0;scale:.94}20%{opacity:.9;scale:1}100%{opacity:0;scale:1.14}}
+@media(prefers-reduced-motion:reduce){.road-stream i:nth-child(2){display:none}.lane:active .target-halo{opacity:.65}.lane:active .target-beam{opacity:.65}}
