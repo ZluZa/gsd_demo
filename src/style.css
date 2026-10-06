@@ -59,3 +59,10 @@ body{padding:0}
 .locked-day-message{position:absolute;z-index:30;left:50%;top:calc(29.1458% + 4cqw);width:max-content;max-width:94%;text-align:center;pointer-events:none;color:white;font-size:4.7cqw;font-weight:900;line-height:1.4;paint-order:stroke fill;-webkit-text-stroke:1cqw #8b19dc;text-shadow:0 .5cqw 1.2cqw #49107888;animation:locked-day-float 2.6s ease-out both}
 @keyframes locked-day-float{0%{opacity:0;transform:translate(-50%,2cqw) scale(.9)}12%,55%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-12cqw) scale(1)}}
 @media(prefers-reduced-motion:reduce){.locked-day-message{animation-name:locked-day-fade}@keyframes locked-day-fade{0%,100%{opacity:0;transform:translateX(-50%)}12%,80%{opacity:1;transform:translateX(-50%)}}}
+
+/* Move only road artwork outward; hit targets and note paths stay fixed. */
+.lane-0 .road{translate:-2.9cqw 0}
+.lane-1 .road{translate:2.9cqw 0}
+
+/* Keep the menu back button circular on every portrait aspect ratio. */
+.menu-screen>.back{height:auto!important;aspect-ratio:1}
