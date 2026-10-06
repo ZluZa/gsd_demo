@@ -380,5 +380,6 @@
       "time": 46.434,
       "lane": 1
     }
-  ]
+  ],
+  "noteOffsetSeconds": 0.03
 }

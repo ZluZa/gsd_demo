@@ -1,10 +1,11 @@
+import {loadTrack,unlockAudio,beep,celebrate,stopEffects} from './game-audio.js';
 import {runtime} from './runtime-config.js';
 import {loadEvent} from './event-source.js';
 import {eventState, award, saveScore, timingPoints} from './event.js';
 import {I18N} from './reference-i18n.js';
 import {copy} from './copy.js';
-import {decorateScreen,hitMotion,flyHitNote} from './motion.js?v=lane-fx-1';
-import {menuUI,resultUI,endUI,gameUI} from './psd-ui.js?v=lane-fx-1';
+import {decorateScreen,hitMotion,flyHitNote} from './motion.js?v=scene-tutorial-2';
+import {menuUI,resultUI,endUI,gameUI} from './psd-ui.js?v=scene-tutorial-2';
 const $ = s=>document.querySelector(s), app=$('#app');
 const params=new URLSearchParams(location.search), assets='public/assets/';
 if(runtime.mode==='static-demo'){
@@ -25,15 +26,16 @@ function emit(type,payload={}) {
  window.ReactNativeWebView?.postMessage(message);
  window.Unity?.call?.(message);
 }
-window.Play321={setLanguage(language){if(copy[language]){lang=language;if(screen!=='game')render();}},pause(){pause();},resume(){if(screen==='pause')resume();}};
-function stop(){cancelAnimationFrame(frame);audio?.pause();audio=null;}
+window.Play321={setLanguage(language){if(copy[language]){lang=language;if(screen!=='game')render();else if(run?.tutorial)showTutorial();}},pause(){pause();},resume(){if(screen==='pause')resume();}};
+function stop(){cancelAnimationFrame(frame);audio?.pause();audio=null;stopEffects();}
 function demoControls(){
  if(!params.has('demo'))return '';
  return `<details class="demo"><summary>${t('prototype')}</summary><nav>${Array.from({length:9},(_,d)=>`<a href="?demo=1&day=${d}&lang=${lang}">${d}</a>`).join('')}</nav><p>${t('preview')}</p><nav>${['menu','result','end'].map((view,i)=>`<a href="?demo=1&day=${params.get('day')||6}&lang=${lang}&screen=${view}">${t(['menuPreview','resultPreview','winPreview'][i])}</a>`).join('')}</nav></details>`;
 }
 function render(){
  const enteringMenu = !app.querySelector('.menu-screen');
- const enteringTutorial = !app.querySelector('.tutorial-screen');
+ const logo=app.querySelector('[data-art="logo"]');
+ const logoTimes=logo?.getAnimations().map(a=>a.currentTime);
  const enteringResult = !app.querySelector('.result-screen');
  const enteringEnd = !app.querySelector('.end-screen');
  window.scrollTo(0,0);
@@ -43,23 +45,23 @@ function render(){
  const ctx={t,s:state(),tracks,selected,scores,lang,name:playerName,demo:params.has('demo'),track:tracks[selected-1],score:run?.score??scores[selected]??0};
  if(screen==='menu'){
  app.innerHTML=menuUI(ctx)+demoControls();
+ if(logo){app.querySelector('[data-art="logo"]').replaceWith(logo);logo.getAnimations().forEach((a,i)=>{if(logoTimes[i]!=null)a.currentTime=logoTimes[i];});}
  app.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.day);render();});
- $('#play').onclick=()=>{screen='tutorial';render();};
+ $('#play').onclick=startGame;
  $('#back').onclick=()=>emit('close');
  $('#language').onchange=e=>{lang=e.target.value.toLowerCase();render();};updateTimer();
  }else if(screen==='result'){
  app.innerHTML=resultUI(ctx)+demoControls();
- const proceed=()=>{screen='menu';selected=Math.min(selected+1,state().day);render();};
+ const proceed=()=>{stopEffects();screen='menu';selected=Math.min(selected+1,state().day);render();};
  $('#continue').onclick=proceed;
  $('#save-name').onclick=()=>{playerName=$('#player-name').value.trim().slice(0,30);try{localStorage.setItem(storageKey+':name',playerName);}catch{}proceed();};
  }else if(screen==='end'){
  app.innerHTML=endUI(ctx)+demoControls();$('#certificate').onclick=downloadCertificate;
- }else if(screen==='tutorial'||screen==='pause'){
- const tutorial=screen==='tutorial';
- app.innerHTML=`<div class="screen utility-screen ${tutorial?'tutorial-screen':'pause-screen'}"><button class="circle-button utility-back" id="back" aria-label="${t('exitMenu')}"><span class="back-arrow"></span></button><div class="center"><span class="large-note">${tutorial?'♫':'Ⅱ'}</span><h1>${tutorial?escape(tracks[selected-1].title):t('paused')}</h1>${tutorial?`<p class="tutorial-copy">${t('tutorial')}</p><div class="mini-lanes" aria-hidden="true"><i>★</i><i>★</i></div>`:''}<button class="primary" id="start">${tutorial?t('start'):t('resume')}</button></div></div>`;
- $('#start').onclick=tutorial?startGame:resume;$('#back').onclick=()=>{stop();screen='menu';render();};
+ }else if(screen==='pause'){
+ app.innerHTML=`<div class="screen utility-screen pause-screen"><button class="circle-button utility-back" id="back" aria-label="${t('exitMenu')}"><span class="back-arrow"></span></button><div class="center"><span class="large-note">Ⅱ</span><h1>${t('paused')}</h1><button class="primary" id="start">${t('resume')}</button></div></div>`;
+ $('#start').onclick=resume;$('#back').onclick=()=>{stop();run=null;screen='menu';render();};
  }
- decorateScreen((screen==='menu' && enteringMenu)||(screen==='tutorial' && enteringTutorial)||(screen==='result' && enteringResult)||(screen==='end' && enteringEnd));
+ decorateScreen((screen==='menu' && enteringMenu)||(screen==='result' && enteringResult)||(screen==='end' && enteringEnd));
 }
 function gameView(entrance=false){
  window.scrollTo(0,0);
@@ -69,13 +71,24 @@ function gameView(entrance=false){
 }
 async function startGame(){
  if(state().ended||selected>state().day){screen='menu';render();return;}
- stop();run={score:0,notes:tracks[selected-1].notes.map(n=>({...n,lane:n.lane%2,hit:false,el:null})),finished:false};
- screen='game';gameView(true);
- audio=new Audio(`${assets}tracks/${tracks[selected-1].folder}/track.mp3`);audio.preload='auto';
- const current=audio;
- current.onended=finish;
- current.onerror=()=>{if(audio===current){stop();screen='tutorial';render();$('.center').insertAdjacentHTML('afterbegin',`<p role="alert">${t('audioError')}</p>`);}};
- try{await current.play();if(audio!==current)return;current.pause();current.currentTime=0;run.countdown=performance.now()+3000;emit('gameStarted',{day:selected});tick();}catch{if(audio===current)pause();}
+ stop();const currentRun=run={score:0,notes:tracks[selected-1].notes.map(n=>({...n,time:n.time+(tracks[selected-1].noteOffsetSeconds||0),lane:n.lane%2,hit:false,el:null})),finished:false,tutorial:true};
+ screen='game';gameView(true);showTutorial();
+ try{
+  await unlockAudio();
+  const loaded=await loadTrack(`${assets}tracks/${tracks[selected-1].folder}/track.mp3`,2.3);
+  if(run!==currentRun||!run.tutorial||!['game','pause'].includes(screen))return;
+  audio=loaded;audio.onended=finish;run.ready=true;
+  if(screen==='game')showTutorial();
+ }catch{if(run===currentRun){run.loadError=true;if(screen==='game')showTutorial(true);}}
+}
+function showTutorial(failed=run.loadError||false){
+ const scene=$('.game-screen');scene.classList.add('teaching');
+ scene.querySelector('.tutorial-overlay')?.remove();
+ scene.insertAdjacentHTML('beforeend',`<div class="tutorial-overlay"><div class="tutorial-message"><p>${failed?t('audioError'):t('tutorial')}</p><button id="start" class="primary" ${!run.ready&&!failed?'disabled':''}>${failed?t('retry'):run.ready?t('start'):t('loading')}</button></div><button id="tutorial-back" class="circle-button utility-back" aria-label="${t('exitMenu')}"><span class="back-arrow"></span></button></div>`);
+ $('#tutorial-back').onclick=()=>{stop();run=null;screen='menu';render();};
+ $('#start').onclick=failed?startGame:async()=>{
+  try{await unlockAudio();if(screen!=='game')return;run.tutorial=false;scene.classList.remove('teaching');scene.querySelector('.tutorial-overlay').remove();run.countdown=performance.now()+3000;emit('gameStarted',{day:selected});tick();}catch{showTutorial(true);}
+ };
 }
 function tick(){
  if(screen!=='game'||!audio)return;
@@ -84,7 +97,10 @@ function tick(){
  if(run.countdown){
  time=(performance.now()-run.countdown)/1000;
  $('#feedback').textContent=String(Math.max(1,Math.ceil(-time)));
- if(time>=0){run.countdown=null;$('#feedback').textContent='';audio.play().catch(pause);time=0;}
+ const number=Math.max(1,Math.ceil(-time));
+ if(time<0&&run.lastBeep!==number){beep(number);run.lastBeep=number;}
+ if(time>=0){run.countdown=null;$('#feedback').textContent='';audio.play().catch(pause);}
+ frame=requestAnimationFrame(tick);return;
  }
  const duration=audio.duration||tracks[selected-1].duration;
  $('#progress').value=Math.max(0,time/duration);
@@ -95,14 +111,14 @@ function tick(){
   if(!n.el){n.el=document.createElement('i');n.el.className='note';n.el.innerHTML='<span></span>';$(`.lane-${n.lane} .notes`).append(n.el);}
   const distance=1-delta/travel;
   n.el.style.transform=`translate(-50%, -50%) translateY(${target*distance}px) scale(${.4+.6*Math.min(1,distance)})`;
-  n.el.style.left=`${50+(n.lane===0?15:-15)*(1-Math.min(1,distance))}%`;
+  n.el.style.left=`${(n.lane===0?51:49)+(n.lane===0?14:-14)*(1-Math.min(1,distance))}%`;
  }
  frame=requestAnimationFrame(tick);
 }
 function hit(lane){
  if(screen!=='game'||!audio)return;
  const b=$(`.lane-${lane}`);b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');
- if(audio.paused)return;
+ if(audio.paused||run.tutorial||run.countdown||audio.currentTime<0)return;
  const time=audio.currentTime;
  const n=run.notes.filter(n=>!n.hit&&n.lane===lane&&Math.abs(n.time-time)<=.36).sort((a,b)=>Math.abs(a.time-time)-Math.abs(b.time-time))[0];
  if(!n)return;
@@ -115,11 +131,11 @@ function finish(){
  if(state().expired){stop();screen='end';render();return;}
  run.finished=true;scores=saveScore(scores,selected,run.score);
  try{localStorage.setItem(storageKey,JSON.stringify(scores));}catch{}
- emit('gameCompleted',{day:selected,score:run.score,total:eventState(event,now(),scores).total});stop();screen='result';render();
+ emit('gameCompleted',{day:selected,score:run.score,total:eventState(event,now(),scores).total});stop();screen='result';render();celebrate(lang);
  if(state().ended)emit('eventCompleted',{total:state().total,tier:award(state().total,maximum()),language:lang});
 }
-function pause(){if(screen!=='game')return;audio?.pause();if(run?.countdown){run.countdownRemaining=Math.max(0,run.countdown-performance.now());run.countdown=null;}cancelAnimationFrame(frame);screen='pause';render();}
-async function resume(){if(!audio)return;screen='game';gameView();for(const n of run.notes)n.el=null;try{if(run.countdownRemaining!=null){run.countdown=performance.now()+run.countdownRemaining;run.countdownRemaining=null;}else await audio.play();tick();}catch{pause();}}
+function pause(){if(screen!=='game')return;audio?.pause();stopEffects();if(run?.countdown){run.countdownRemaining=Math.max(0,run.countdown-performance.now());run.countdown=null;}cancelAnimationFrame(frame);screen='pause';render();}
+async function resume(){if(!run)return;screen='game';gameView();if(run.tutorial){showTutorial();return;}if(!audio)return;for(const n of run.notes)n.el=null;try{if(run.countdownRemaining!=null){run.countdown=performance.now()+run.countdownRemaining;run.countdownRemaining=null;}else await audio.play();tick();}catch{pause();}}
 function updateTimer(){if(!event)return;const s=state();if(s.ended&&!['end','certificate'].includes(screen)){stop();screen='end';render();return;}if($('#timer')){const sec=Math.ceil(s.remaining/1000),d=Math.floor(sec/86400);$('#timer').textContent=`${d} · ${String(Math.floor(sec/3600)%24).padStart(2,'0')}:${String(Math.floor(sec/60)%60).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;}if(screen==='menu'&&s.day!==lastDay){lastDay=s.day;render();}}
 let lastDay;
 function downloadCertificate(){
@@ -154,7 +170,7 @@ async function boot(){
 }
 window.addEventListener('keydown',e=>{if(e.repeat)return;if(e.code==='KeyQ'||e.code==='ArrowLeft')hit(0);if(e.code==='KeyW'||e.code==='ArrowRight')hit(1);});
 document.addEventListener('visibilitychange',async()=>{
- if(document.hidden){pause();return;}
+ if(document.hidden){stopEffects();pause();return;}
  if(!event||runtime.mode==='static-demo')return;
  try{const began=performance.now();const response=await fetch('/api/event'+(params.has('demo')?'?day='+encodeURIComponent(params.get('day')||'1'):''),{cache:'no-store'});if(!response.ok)return;const fresh=await response.json();if(fresh.id===event.id&&Number.isFinite(fresh.serverNow)){event.serverNow=fresh.serverNow;anchor=performance.now()-(performance.now()-began)/2;updateTimer();}}catch{}
 });

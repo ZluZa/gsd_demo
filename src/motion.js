@@ -15,12 +15,14 @@ function animate(element, frames, options) {
   animation.oncancel = release;
   return animation;
 }
-function clearAnimations() {
-  for (const animation of activeAnimations) animation.cancel();
-  activeAnimations.clear();
+function clearAnimations(preserveLogo=false) {
+  for (const animation of [...activeAnimations]) {
+    if(preserveLogo && animation.effect?.target?.matches('[data-art="logo"]') && animation.effect.target.isConnected)continue;
+    animation.cancel();activeAnimations.delete(animation);
+  }
 }
 export function decorateScreen(entrance = false) {
-  clearAnimations();
+  clearAnimations(!entrance);
   const screen = document.querySelector('#app .screen');
   if (!screen) return;
   {
@@ -71,6 +73,7 @@ export function decorateScreen(entrance = false) {
     });
   }
   if (screen.matches('.result-screen')) {
+    victoryConfetti(screen);
     ['.result-heading','.result-score','.result-instruction','.name-input','.result-board-wrap','#save-name','#continue'].forEach((selector,i)=>{
       animate(screen.querySelector(selector), [
         {transform:'translateY(26px)',opacity:0},
@@ -126,20 +129,21 @@ function victoryConfetti(screen) {
   layer.setAttribute('aria-hidden','true');
   screen.append(layer);
   const completions=[];
-  for(let i=0;i<22;i++) {
+  for(let i=0;i<44;i++) {
     const piece=document.createElement('i');
-    const x=6+(i*37)%88;
+    const x=i%2?98:2;
+    piece.style.top="58%";
     piece.style.left=`${x}%`;
     piece.style.background=['#ffe08a','#c8efb0','#f5b9df','#b7e5fa'][i%4];
     if(i%3===0)piece.style.borderRadius='50%';
     layer.append(piece);
-    const direction=i%2?1:-1;
+    const direction=i%2?-1:1;
     const fall=screen.clientHeight*(.38+(i%5)*.07);
     const animation=animate(piece,[
       {transform:`translate(0,-16px) rotate(${i*17}deg)`,opacity:0},
-      {opacity:.7,offset:.14},
+      {transform:`translate(${direction*(35+i%7*9)}px,-${screen.clientHeight*.3}px) rotate(${i*23}deg)`,opacity:.9,offset:.35},
       {opacity:.6,offset:.7},
-      {transform:`translate(${direction*(15+i%4*8)}px,${fall}px) rotate(${direction*(100+i*13)}deg)`,opacity:0}
+      {transform:`translate(${direction*(40+i%8*12)}px,${fall}px) rotate(${direction*(100+i*13)}deg)`,opacity:0}
     ],{duration:2300+i%4*180,delay:450+i%6*65,easing:'cubic-bezier(.2,.45,.5,1)',fill:'both'});
     if(animation)completions.push(animation.finished.catch(()=>{}));
   }

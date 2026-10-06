@@ -252,5 +252,6 @@
       "time": 31.422,
       "lane": 1
     }
-  ]
+  ],
+  "noteOffsetSeconds": 0.025
 }

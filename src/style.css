@@ -26,3 +26,27 @@ body{padding:0}
 .end-screen .gift-button{top:calc(53.2292% + 40cqw)!important;height:15.3cqw!important}
 .note-flying{z-index:7;pointer-events:none}
 @media(orientation:landscape) and (max-height:600px){.screen{min-height:0}}
+
+/* Recessed landing cells share their silhouette with the arriving notes. */
+.target,.lane-1 .target{background:#17327635;border:.55cqw solid #dbfaff88;box-shadow:inset 0 1.4cqw 2.4cqw #14114e70,0 .5cqw .6cqw #ffffff40}
+.lane-1 .target{background:#69315c30;border-color:#fff3b888}
+.target>i{opacity:.24}.target::before{display:none}
+.note{width:41cqw;height:21.5cqw}.note span{width:15cqw;height:12cqw}
+#language{color:#fff;background-color:#782cba;color-scheme:light}
+#language option{color:#35104e;background:#fff}
+.back-arrow{width:5.4cqw;height:5.4cqw;background:none;border-radius:0;border:0}
+.back-arrow::before{inset:0;top:0;width:100%;height:100%;border:0;border-radius:0;background:white;transform:none;clip-path:polygon(45% 5%,55% 15%,28% 43%,100% 43%,100% 57%,28% 57%,55% 85%,45% 95%,0 50%)}
+.tutorial-overlay{position:absolute;inset:0;z-index:10;background:#170d3ab8;color:white}
+.tutorial-message{position:absolute;top:36%;left:8%;width:84%;text-align:center}
+.tutorial-message p{font-size:5.2cqw;line-height:1.35;margin:0 0 4cqw}
+.tutorial-message .primary{position:relative;min-height:12cqw;width:76%;font-size:4.5cqw}
+.teaching .lanes{z-index:11;pointer-events:none}
+.teaching .road{filter:brightness(.3)}.teaching .notes{visibility:hidden}
+.teaching .target{background:#54cfea55;border-color:#e5fbff;box-shadow:inset 0 1cqw 2cqw #12205270,0 0 4cqw #77edff70;animation:tutorial-demo-press 3.2s ease-in-out 1.2s infinite}
+.teaching .lane-1 .target{background:#ffdf5355;border-color:#fff4b8;animation-delay:2.8s}
+.teaching .target::after{content:'';position:absolute;inset:-4px;border:2px solid #fff9;border-radius:50%;opacity:0;animation:tutorial-tap-ring 3.2s ease-out 1.2s infinite}
+.teaching .lane-1 .target::after{animation-delay:2.8s}
+/* Keep tutorial text above the lifted cells and dimmed roads. */
+.teaching::after{content:'';position:absolute;inset:0;z-index:10;background:#170d3ab8;pointer-events:none}
+.teaching .tutorial-overlay{z-index:12;background:transparent;pointer-events:none}
+.tutorial-overlay button{pointer-events:auto}

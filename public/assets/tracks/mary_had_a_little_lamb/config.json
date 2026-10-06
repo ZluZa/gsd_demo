@@ -140,5 +140,6 @@
       "time": 35.358,
       "lane": 0
     }
-  ]
+  ],
+  "noteOffsetSeconds": 0.035
 }
