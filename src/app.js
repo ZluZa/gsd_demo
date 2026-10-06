@@ -1,11 +1,12 @@
-import {loadTrack,unlockAudio,beep,celebrate,stopEffects} from './game-audio.js';
+import {lockedDayMessage} from './locked-day.js';
+import {loadTrack,unlockAudio,beep,celebrate,stopEffects,prepareApplause} from './game-audio.js';
 import {runtime} from './runtime-config.js';
 import {loadEvent} from './event-source.js';
 import {eventState, award, saveScore, timingPoints} from './event.js';
 import {I18N} from './reference-i18n.js';
 import {copy} from './copy.js';
-import {decorateScreen,hitMotion,flyHitNote} from './motion.js?v=scene-tutorial-2';
-import {menuUI,resultUI,endUI,gameUI} from './psd-ui.js?v=scene-tutorial-2';
+import {decorateScreen,hitMotion,flyHitNote,victoryConfetti} from './motion.js?v=restored-lanes-1';
+import {menuUI,resultUI,endUI,gameUI} from './psd-ui.js?v=restored-lanes-1';
 const $ = s=>document.querySelector(s), app=$('#app');
 const params=new URLSearchParams(location.search), assets='public/assets/';
 if(runtime.mode==='static-demo'){
@@ -15,7 +16,7 @@ if(runtime.mode==='static-demo'){
 let lang=params.get('lang') || window.PLAY321_CONTEXT?.language || 'ru';
 if(!copy[lang]) lang='ru';
 let event, anchor, scores={}, tracks=[], selected=1, screen='loading', audio, frame, run, storageKey, playerName='';
-const t=k=>copy[lang][k] ?? I18N[lang][k] ?? k;
+const t=k=>copy[lang][k] ?? I18N[lang]?.[k] ?? k;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const now=()=>event.serverNow + performance.now()-anchor;
 const state=()=>eventState(event,now(),scores);
@@ -39,22 +40,21 @@ function render(){
  const enteringResult = !app.querySelector('.result-screen');
  const enteringEnd = !app.querySelector('.end-screen');
  window.scrollTo(0,0);
- document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';$('#rotateText').textContent=t('rotate');
+ document.title=`321playsy · ${t('appTitle')}`;document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';$('#rotateText').textContent=t('rotate');
  if(!event){app.innerHTML=`<div class="screen utility-screen"><div class="center"><h2>${t(screen==='error'?'error':'loading')}</h2>${screen==='error'?`<button class="primary" id="retry">${t('retry')}</button>`:''}</div></div>`;$('#retry')?.addEventListener('click',boot);decorateScreen();return;}
  if(state().ended){stop();screen='end';}
  const ctx={t,s:state(),tracks,selected,scores,lang,name:playerName,demo:params.has('demo'),track:tracks[selected-1],score:run?.score??scores[selected]??0};
  if(screen==='menu'){
  app.innerHTML=menuUI(ctx)+demoControls();
- if(logo){app.querySelector('[data-art="logo"]').replaceWith(logo);logo.getAnimations().forEach((a,i)=>{if(logoTimes[i]!=null)a.currentTime=logoTimes[i];});}
- app.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.day);render();});
+ if(logo){const nextLogo=app.querySelector('[data-art="logo"]');logo.src=nextLogo.src;logo.alt=nextLogo.alt;nextLogo.replaceWith(logo);logo.getAnimations().forEach((a,i)=>{if(logoTimes[i]!=null)a.currentTime=logoTimes[i];});}
+ app.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{const day=Number(b.dataset.day);if(day>state().day){showLockedDay(day-state().day);return;}selected=day;render();});
  $('#play').onclick=startGame;
  $('#back').onclick=()=>emit('close');
  $('#language').onchange=e=>{lang=e.target.value.toLowerCase();render();};updateTimer();
  }else if(screen==='result'){
  app.innerHTML=resultUI(ctx)+demoControls();
  const proceed=()=>{stopEffects();screen='menu';selected=Math.min(selected+1,state().day);render();};
- $('#continue').onclick=proceed;
- $('#save-name').onclick=()=>{playerName=$('#player-name').value.trim().slice(0,30);try{localStorage.setItem(storageKey+':name',playerName);}catch{}proceed();};
+ $('#continue').onclick=()=>{playerName=$('#player-name').value.trim().slice(0,30);try{localStorage.setItem(storageKey+':name',playerName);}catch{}proceed();};
  }else if(screen==='end'){
  app.innerHTML=endUI(ctx)+demoControls();$('#certificate').onclick=downloadCertificate;
  }else if(screen==='pause'){
@@ -62,6 +62,25 @@ function render(){
  $('#start').onclick=resume;$('#back').onclick=()=>{stop();run=null;screen='menu';render();};
  }
  decorateScreen((screen==='menu' && enteringMenu)||(screen==='result' && enteringResult)||(screen==='end' && enteringEnd));
+ if(params.has('demo')&&['result','end'].includes(screen)){
+  const button=document.createElement('button');button.className='demo-effects';button.id='preview-effects';
+  button.textContent={ru:'▶ Повторить конфетти и аплодисменты',en:'▶ Replay confetti and applause',fr:'▶ Rejouer la fête',ar:'▶ إعادة الاحتفال',hi:'▶ जश्न फिर चलाएँ'}[lang];
+  button.onclick=()=>{victoryConfetti();celebrate();};app.append(button);
+ }
+
+}
+function showLockedDay(daysUntilUnlock){
+ const menu=app.querySelector('.menu-screen');
+ if(!menu)return;
+ menu.querySelector('.locked-day-message')?.remove();
+ const message=document.createElement('div');
+ message.className='locked-day-message';
+ message.setAttribute('role','status');
+ message.dir=lang==='ar'?'rtl':'ltr';
+ message.textContent=lockedDayMessage(lang,daysUntilUnlock);
+ menu.append(message);
+ message.addEventListener('animationend',()=>message.remove(),{once:true});
+ setTimeout(()=>message.remove(),3000);
 }
 function gameView(entrance=false){
  window.scrollTo(0,0);
@@ -75,6 +94,7 @@ async function startGame(){
  screen='game';gameView(true);showTutorial();
  try{
   await unlockAudio();
+  prepareApplause().catch(()=>{});
   const loaded=await loadTrack(`${assets}tracks/${tracks[selected-1].folder}/track.mp3`,2.3);
   if(run!==currentRun||!run.tutorial||!['game','pause'].includes(screen))return;
   audio=loaded;audio.onended=finish;run.ready=true;
@@ -131,12 +151,12 @@ function finish(){
  if(state().expired){stop();screen='end';render();return;}
  run.finished=true;scores=saveScore(scores,selected,run.score);
  try{localStorage.setItem(storageKey,JSON.stringify(scores));}catch{}
- emit('gameCompleted',{day:selected,score:run.score,total:eventState(event,now(),scores).total});stop();screen='result';render();celebrate(lang);
+ emit('gameCompleted',{day:selected,score:run.score,total:eventState(event,now(),scores).total});stop();screen='result';render();celebrate();
  if(state().ended)emit('eventCompleted',{total:state().total,tier:award(state().total,maximum()),language:lang});
 }
 function pause(){if(screen!=='game')return;audio?.pause();stopEffects();if(run?.countdown){run.countdownRemaining=Math.max(0,run.countdown-performance.now());run.countdown=null;}cancelAnimationFrame(frame);screen='pause';render();}
 async function resume(){if(!run)return;screen='game';gameView();if(run.tutorial){showTutorial();return;}if(!audio)return;for(const n of run.notes)n.el=null;try{if(run.countdownRemaining!=null){run.countdown=performance.now()+run.countdownRemaining;run.countdownRemaining=null;}else await audio.play();tick();}catch{pause();}}
-function updateTimer(){if(!event)return;const s=state();if(s.ended&&!['end','certificate'].includes(screen)){stop();screen='end';render();return;}if($('#timer')){const sec=Math.ceil(s.remaining/1000),d=Math.floor(sec/86400);$('#timer').textContent=`${d} · ${String(Math.floor(sec/3600)%24).padStart(2,'0')}:${String(Math.floor(sec/60)%60).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;}if(screen==='menu'&&s.day!==lastDay){lastDay=s.day;render();}}
+function updateTimer(){if(!event)return;const s=state();if(s.ended&&!['end','certificate'].includes(screen)){stop();screen='end';render();return;}if($('#timer')){const minutes=Math.floor(Math.max(0,s.remaining)/60000),days=Math.floor(minutes/1440),hours=Math.floor(minutes/60)%24;const units={ru:['д.','ч.','м.'],en:['d.','h.','m.'],fr:['j.','h.','min.'],ar:['ي.','س.','د.'],hi:['दि.','घं.','मि.']}[lang];$('#timer').textContent=`${days?`${days} ${units[0]} `:''}${hours} ${units[1]} ${String(minutes%60).padStart(2,'0')} ${units[2]}`;}if(screen==='menu'&&s.day!==lastDay){lastDay=s.day;render();}}
 let lastDay;
 function downloadCertificate(){
  const tier=award(state().total,maximum());

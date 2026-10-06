@@ -74,7 +74,7 @@ export function decorateScreen(entrance = false) {
   }
   if (screen.matches('.result-screen')) {
     victoryConfetti(screen);
-    ['.result-heading','.result-score','.result-instruction','.name-input','.result-board-wrap','#save-name','#continue'].forEach((selector,i)=>{
+    ['.result-heading','.result-score','.result-instruction','.name-input','.result-board-wrap','#continue'].forEach((selector,i)=>{
       animate(screen.querySelector(selector), [
         {transform:'translateY(26px)',opacity:0},
         {transform:'translateY(0)',opacity:1}
@@ -123,31 +123,35 @@ export function decorateScreen(entrance = false) {
     });
   }
 }
-function victoryConfetti(screen) {
-  const layer=document.createElement('div');
-  layer.className='victory-confetti';
-  layer.setAttribute('aria-hidden','true');
-  screen.append(layer);
-  const completions=[];
-  for(let i=0;i<44;i++) {
-    const piece=document.createElement('i');
-    const x=i%2?98:2;
-    piece.style.top="58%";
-    piece.style.left=`${x}%`;
-    piece.style.background=['#ffe08a','#c8efb0','#f5b9df','#b7e5fa'][i%4];
-    if(i%3===0)piece.style.borderRadius='50%';
-    layer.append(piece);
-    const direction=i%2?-1:1;
-    const fall=screen.clientHeight*(.38+(i%5)*.07);
-    const animation=animate(piece,[
-      {transform:`translate(0,-16px) rotate(${i*17}deg)`,opacity:0},
-      {transform:`translate(${direction*(35+i%7*9)}px,-${screen.clientHeight*.3}px) rotate(${i*23}deg)`,opacity:.9,offset:.35},
-      {opacity:.6,offset:.7},
-      {transform:`translate(${direction*(40+i%8*12)}px,${fall}px) rotate(${direction*(100+i*13)}deg)`,opacity:0}
-    ],{duration:2300+i%4*180,delay:450+i%6*65,easing:'cubic-bezier(.2,.45,.5,1)',fill:'both'});
-    if(animation)completions.push(animation.finished.catch(()=>{}));
+export function victoryConfetti(screen=document.querySelector('#app .screen')) {
+ const previous=screen?.querySelector('.victory-confetti');
+ if(previous){
+  for(const animation of [...activeAnimations]){
+   if(previous.contains(animation.effect?.target)){animation.cancel();activeAnimations.delete(animation);}
   }
-  Promise.all(completions).then(()=>layer.remove());
+  previous.remove();
+ }
+ if(!screen||reduced.matches||document.hidden)return;
+ const layer=document.createElement('div');
+ layer.className='victory-confetti';layer.setAttribute('aria-hidden','true');
+ screen.prepend(layer);
+ // Small native PSD serpentines drift behind every foreground element.
+ // Staggered phases make a quiet background, rather than a foreground burst.
+ const height=screen.clientHeight;
+ for(let i=0;i<20;i++){
+  const piece=document.createElement('img');piece.alt='';piece.draggable=false;
+  piece.src=`public/assets/psd/ribbon-${i%2?'right':'left'}.webp`;
+  piece.style.left=`${3+(i*37)%94}%`;
+  piece.style.width=`${3.2+(i%4)*.8}cqw`;
+  layer.append(piece);
+  const duration=10500+(i%5)*1100,rotation=(i*47)%360;
+  const frames=Array.from({length:13},(_,step)=>{
+   const progress=step/12;
+   const sway=Math.sin(progress*Math.PI*3+i)*screen.clientWidth*.025;
+   return {offset:progress,transform:`translate3d(${sway}px,${-65+(height+130)*progress}px,0) rotate(${rotation+progress*(i%2?110:-110)}deg)`,opacity:Math.min(1,progress*8,(1-progress)*8)*.48};
+  });
+  animate(piece,frames,{duration,delay:-duration*((i*.618)%1),iterations:Infinity,easing:'linear'});
+ }
 }
 export function flyHitNote(note) {
   if (!note) return;

@@ -120,8 +120,12 @@
 
 /* Tutorial keeps the procedural light and particles, without the PSD sunburst. */
 .tutorial-screen{background-image:linear-gradient(180deg,#9e64bf 0%,#8746bd 35%,#6420b7 65%,#4b00b0 100%)}
-.victory-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
-.victory-confetti i{position:absolute;top:0;width:1.25cqw;height:2.1cqw;max-width:6px;max-height:10px;border-radius:1px;opacity:0}
+/* PSD serpentines sit above the backdrop and below the complete interface. */
+.victory-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+.victory-confetti img{position:absolute;top:0;height:auto;max-width:none;opacity:0;will-change:transform;user-select:none}
+.result-screen>.result-heading,.result-screen>.result-score,.result-screen>.result-instruction,
+.result-screen>.name-input,.result-screen>.result-board-wrap,.result-screen>.primary,
+.end-screen>.art,.end-screen>.end-title{z-index:2}
 .end-screen .end-board,.end-screen .gift-button{z-index:4}
 @media(prefers-reduced-motion:reduce){.victory-confetti{display:none}}
 

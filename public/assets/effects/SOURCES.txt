@@ -1,0 +1,4 @@
+User-selected source assets, downloaded unchanged on 2026-10-06.
+Confetti: project Art/Rhythm_with_Dino_win_screen.psd layers 1/3 serpentines_2 and 1/4 serpentines_1; existing exports public/assets/psd/ribbon-left.webp and ribbon-right.webp.
+Applause page: https://www.myinstants.com/ru/instant/crowd-cheer-applause-73083/
+Applause MP3: https://www.myinstants.com/media/sounds/crowd-cheering-applause.mp3
