@@ -66,3 +66,13 @@ body{padding:0}
 
 /* Keep the menu back button circular on every portrait aspect ratio. */
 .menu-screen>.back{height:auto!important;aspect-ratio:1}
+
+/* Approved gap layout: vivid road surfaces with a single clean inner edge. */
+.road{background:linear-gradient(105deg,#8beaff55,transparent 42%),linear-gradient(110deg,#438df9,#484bef 55%,#6244f5)}
+.lane-1 .road{background:linear-gradient(75deg,transparent 50%,#ffd7f555),linear-gradient(70deg,#c44cba,#e57bd7 60%,#f4a5e9)}
+.road::before{inset:0;background:none;clip-path:none;border:0;border-right:2px solid #a3dfff99}
+.lane-1 .road::before{inset:0;background:none;clip-path:none;border:0;border-left:2px solid #fff2a699}
+/* Shine stays clipped inside each road; the divider is independent of edges. */
+.road-shine,.road::after{display:block}
+.lanes::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:2px;transform:translateX(-50%);background:linear-gradient(#edffffcc,#c5b3ffb3 50%,#ffe5facc);box-shadow:0 0 1.3cqw .25cqw #d9bdff66;pointer-events:none}
+.teaching .lanes::before{opacity:.3}
