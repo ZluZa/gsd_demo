@@ -1,4 +1,4 @@
-import {DAY} from './event.js';
+import {DAY} from './event.js?v=32d9dbaa4b3a';
 export function staticDemoEvent(day, now) {
  const startsAt=now-(day-1)*DAY-(day ? 3600000 : 0);
  return {id:`dino-static-demo-v1-day-${day}`,serverNow:now,startsAt,endsAt:startsAt+7*DAY,prototype:true};

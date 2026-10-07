@@ -48,21 +48,21 @@ export function createEventApi(config,context,fetcher=fetch){
   complete(){return request('/statistics/rythm-event/add',{auth:true,body:{event_type:'rythm_event_completed'}});},
  };
 }
-// One writer per page; failed requests stay pending, including across reloads.
+// Server-confirmed scores live in memory and reload from the API.
+// Only the retry queue and completion receipt are persisted on this device.
 export function createProgressSync({api,storage,key,maxScores,onChange=()=>{}}){
  let saved;try{saved=JSON.parse(storage.getItem(key)||'{}');}catch{}
  const state={scores:{},pending:{},completionPending:false,completionSent:false};
  const valid=(d,s)=>/^[1-7]$/.test(d)&&Number.isInteger(s)&&s>=0&&s<=maxScores[Number(d)-1];
- for(const d of Object.keys(saved?.scores||{}))if(valid(d,saved.scores[d]))state.scores[d]=saved.scores[d];
- for(const d of Object.keys(saved?.pending||{}))if(valid(d,saved.pending[d])){state.pending[d]=saved.pending[d];state.scores[d]=Math.max(state.scores[d]??0,saved.pending[d]);}
+ for(const d of Object.keys(saved?.pending||{}))if(valid(d,saved.pending[d]))state.pending[d]=saved.pending[d];
  state.completionSent=saved?.completionSent===true;
  state.completionPending=saved?.completionPending===true&&!state.completionSent;
  let active=null;
- function persist(){try{storage.setItem(key,JSON.stringify(state));}catch{}onChange();}
+ function persist(){try{storage.setItem(key,JSON.stringify({pending:state.pending,completionPending:state.completionPending,completionSent:state.completionSent}));}catch{}onChange();}
  return {
   state,
-  merge(day,score){if(score!==null){state.scores[day]=Math.max(state.scores[day]??0,score);if(Object.hasOwn(state.pending,day))state.pending[day]=state.scores[day];}persist();},
-  record(day,score){state.scores[day]=Math.max(state.scores[day]??0,score);state.pending[day]=state.scores[day];persist();},
+  merge(day,score){if(score===null)delete state.scores[day];else{state.scores[day]=score;if(Object.hasOwn(state.pending,day))state.pending[day]=Math.max(state.pending[day],score);}persist();},
+  record(day,score){state.pending[day]=Math.max(state.scores[day]??0,state.pending[day]??0,score);persist();},
   markCompleted(){if(!state.completionSent){state.completionPending=true;persist();}},
   flush(){
    if(active)return active;
@@ -73,6 +73,7 @@ export function createProgressSync({api,storage,key,maxScores,onChange=()=>{}}){
      while(Object.keys(state.pending).length){
       const day=Object.keys(state.pending)[0],score=state.pending[day];
       await api.saveDay(Number(day),score);
+      state.scores[day]=Math.max(state.scores[day]??0,score);
       if(state.pending[day]===score)delete state.pending[day];persist();
      }
      if(state.completionPending&&!state.completionSent){await api.complete();state.completionPending=false;state.completionSent=true;persist();}

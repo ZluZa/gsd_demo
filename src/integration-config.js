@@ -1,10 +1,10 @@
-import {decodeLeaderboard} from './event-api.js';
+import {decodeLeaderboard} from './event-api.js?v=32d9dbaa4b3a';
 // Swagger: https://swagger.dsu-academy.com/gsd.swagger.json
-// Set enabled=true after the seven game IDs are agreed with the app/backend owner.
+// Day IDs approved by the app/backend owner on 2026-10-07.
 export const integrationConfig = {
- enabled: false,
+ enabled: true,
  apiBaseUrl: 'https://admin.dsu-academy.com/api/v1',
- gameIds: Array.from({length:7},(_,i)=>`rythm_day_${i+1}`), // Proposed IDs, not yet agreed.
+ gameIds: Array.from({length:7},(_,i)=>`rythm_day_${i+1}`), // Approved leaderboard IDs.
  scoreField: 'score',
  bodyEncoding: 'json',
  authHeader: 'Authorization',

@@ -1,15 +1,15 @@
-import {integrationConfig} from './integration-config.js';
-import {isAppLaunch,readLaunchContext,launchEvent,progressKey} from './launch-context.js';
-import {createEventApi,createProgressSync} from './event-api.js';
-import {lockedDayMessage} from './locked-day.js';
-import {loadTrack,unlockAudio,beep,celebrate,stopEffects,prepareApplause} from './game-audio.js';
-import {runtime} from './runtime-config.js';
-import {loadEvent} from './event-source.js';
-import {eventState, award, saveScore, timingPoints} from './event.js';
-import {I18N} from './reference-i18n.js';
-import {copy} from './copy.js';
-import {decorateScreen,hitMotion,flyHitNote,victoryConfetti} from './motion.js?v=restored-lanes-1';
-import {menuUI,resultUI,endUI,gameUI} from './psd-ui.js?v=restored-lanes-1';
+import {integrationConfig} from './integration-config.js?v=32d9dbaa4b3a';
+import {isAppLaunch,readLaunchContext,launchEvent,progressKey} from './launch-context.js?v=32d9dbaa4b3a';
+import {createEventApi,createProgressSync} from './event-api.js?v=32d9dbaa4b3a';
+import {lockedDayMessage} from './locked-day.js?v=32d9dbaa4b3a';
+import {loadTrack,unlockAudio,beep,celebrate,stopEffects,prepareApplause} from './game-audio.js?v=32d9dbaa4b3a';
+import {runtime} from './runtime-config.js?v=32d9dbaa4b3a';
+import {loadEvent} from './event-source.js?v=32d9dbaa4b3a';
+import {eventState, award, saveScore, timingPoints} from './event.js?v=32d9dbaa4b3a';
+import {I18N} from './reference-i18n.js?v=32d9dbaa4b3a';
+import {copy} from './copy.js?v=32d9dbaa4b3a';
+import {decorateScreen,hitMotion,flyHitNote,victoryConfetti} from './motion.js?v=32d9dbaa4b3a';
+import {menuUI,resultUI,endUI,gameUI} from './psd-ui.js?v=32d9dbaa4b3a';
 const $ = s=>document.querySelector(s), app=$('#app');
 const params=new URLSearchParams(location.search), assets='public/assets/';
 const appLaunch=isAppLaunch(params);
@@ -218,7 +218,7 @@ async function boot(){
  tracks=loadedTracks;
  tracks.sort((a,b)=>a.day-b.day);
  storageKey=launch?progressKey(launch):'321playsy:'+loadedEvent.id+':'+(window.PLAY321_CONTEXT?.playerId||'local');
- try{if(!launch)playerName=localStorage.getItem(storageKey+':name')||'';const saved=JSON.parse(localStorage.getItem(storageKey)||'{}');for(let d=1;d<=7;d++)if(Number.isInteger(saved[d])&&saved[d]>=0&&saved[d]<=tracks[d-1].notes.length*3)scores[d]=saved[d];}catch{}
+ try{if(!launch)playerName=localStorage.getItem(storageKey+':name')||'';const saved=launch&&integrationConfig.enabled?{}:JSON.parse(localStorage.getItem(storageKey)||'{}');for(let d=1;d<=7;d++)if(Number.isInteger(saved[d])&&saved[d]>=0&&saved[d]<=tracks[d-1].notes.length*3)scores[d]=saved[d];}catch{}
  if(launch&&integrationConfig.enabled){
   api=createEventApi(integrationConfig,launch);
   const storage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};

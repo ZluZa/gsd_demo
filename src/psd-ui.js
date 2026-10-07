@@ -1,4 +1,4 @@
-import {localizedLogo, supportedLanguages} from './logos.js';
+import {localizedLogo, supportedLanguages} from './logos.js?v=32d9dbaa4b3a';
 // Coordinates refer to the visible PSD artboard, excluding its black export frame.
 // PSD: 2928×4884; visible artwork: x=351..2574, y=42..4842.
 export const art = 'public/assets/psd/';
@@ -42,7 +42,7 @@ export function menuUI(ctx){
 export function resultUI({t,track,selected,scores,name,score,demo,online,rows,appLaunch,syncStatus}){
  return `<div class="screen result-screen"><div class="result-heading" style="${box(952,447,1016,254)}"><span class="note-icon">♫</span><h1>${t('trackFinished')}</h1></div>
  <div class="result-score" style="${box(1105,779,710,280)}"><small>${t('score')}</small><b>${star}${score}</b></div>
- <div class="result-instruction" style="${box(580,1197,1760,220)}"><p>${t(appLaunch?'yourName':'enterName')}</p><p>${t('day')} ${selected} · ${t(appLaunch?(syncStatus==='synced'?'saved':syncStatus==='syncing'?'syncing':'local'):'saved')}</p></div>
+ <div class="result-instruction" style="${box(580,1197,1760,220)}"><p>${t(appLaunch?'yourName':'enterName')}</p><p>${t('day')} ${selected} · ${t(appLaunch?(syncStatus==='synced'?'saved':syncStatus==='syncing'?'syncing':online?'savePending':'local'):'saved')}</p></div>
  <input id="player-name" class="name-input panel" style="${box(427,1499,2075,308)}" ${appLaunch?'readonly':''} maxlength="100" placeholder="${t('yourName')}" aria-label="${t('yourName')}" value="${esc(name)}" autocomplete="nickname">
  <div class="result-board-wrap" style="${box(427,1835,2075,1667)}">${board({track,scores,selected,t,name,result:true,demo,online,rows})}</div>
  <button id="continue" class="primary" style="${box(464,3588,2003,307)}">${t('continue')}</button></div>`;
