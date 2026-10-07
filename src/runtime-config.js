@@ -1,1 +1,1 @@
-export const runtime = {mode:'static-demo',defaultDay:7};
+export const runtime = {mode:'webview'};

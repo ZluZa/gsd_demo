@@ -1,3 +1,6 @@
+import {integrationConfig} from './integration-config.js';
+import {isAppLaunch,readLaunchContext,launchEvent,progressKey} from './launch-context.js';
+import {createEventApi,createProgressSync} from './event-api.js';
 import {lockedDayMessage} from './locked-day.js';
 import {loadTrack,unlockAudio,beep,celebrate,stopEffects,prepareApplause} from './game-audio.js';
 import {runtime} from './runtime-config.js';
@@ -9,13 +12,16 @@ import {decorateScreen,hitMotion,flyHitNote,victoryConfetti} from './motion.js?v
 import {menuUI,resultUI,endUI,gameUI} from './psd-ui.js?v=restored-lanes-1';
 const $ = s=>document.querySelector(s), app=$('#app');
 const params=new URLSearchParams(location.search), assets='public/assets/';
-if(runtime.mode==='static-demo'){
+const appLaunch=isAppLaunch(params);
+if(appLaunch){params.delete('demo');params.delete('day');params.delete('screen');}
+if(runtime.mode==='static-demo'&&!appLaunch){
  params.set('demo','1');
  if(!/^[0-8]$/.test(params.get('day')||''))params.set('day',String(runtime.defaultDay));
 }
-let lang=params.get('lang') || window.PLAY321_CONTEXT?.language || 'ru';
+let lang=params.get('lang')?.toLowerCase().split(/[-_]/)[0] || window.PLAY321_CONTEXT?.language || 'ru';
 if(!copy[lang]) lang='ru';
 let event, anchor, scores={}, tracks=[], selected=1, screen='loading', audio, frame, run, storageKey, playerName='';
+let launch,api,sync,boards={},syncStatus='local',syncInFlight=null,completionEmitted=false;
 const t=k=>copy[lang][k] ?? I18N[lang]?.[k] ?? k;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const now=()=>event.serverNow + performance.now()-anchor;
@@ -41,9 +47,9 @@ function render(){
  const enteringEnd = !app.querySelector('.end-screen');
  window.scrollTo(0,0);
  document.title=`321playsy · ${t('appTitle')}`;document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';$('#rotateText').textContent=t('rotate');
- if(!event){app.innerHTML=`<div class="screen utility-screen"><div class="center"><h2>${t(screen==='error'?'error':'loading')}</h2>${screen==='error'?`<button class="primary" id="retry">${t('retry')}</button>`:''}</div></div>`;$('#retry')?.addEventListener('click',boot);decorateScreen();return;}
- if(state().ended){stop();screen='end';}
- const ctx={t,s:state(),tracks,selected,scores,lang,name:playerName,demo:params.has('demo'),track:tracks[selected-1],score:run?.score??scores[selected]??0};
+ if(!event){app.innerHTML=`<div class="screen utility-screen"><div class="center"><h2>${t(screen==='error'?(appLaunch?'connectionError':'error'):'loading')}</h2>${screen==='error'?`<button class="primary" id="retry">${t('retry')}</button>`:''}</div></div>`;$('#retry')?.addEventListener('click',boot);decorateScreen();return;}
+ if(state().ended){stop();screen='end';notifyCompletion();}
+ const ctx={t,s:state(),tracks,selected,scores,lang,name:playerName,demo:params.has('demo'),appLaunch,online:!!api,rows:boards[selected],syncStatus,track:tracks[selected-1],score:run?.score??scores[selected]??0};
  if(screen==='menu'){
  app.innerHTML=menuUI(ctx)+demoControls();
  if(logo){const nextLogo=app.querySelector('[data-art="logo"]');logo.src=nextLogo.src;logo.alt=nextLogo.alt;nextLogo.replaceWith(logo);logo.getAnimations().forEach((a,i)=>{if(logoTimes[i]!=null)a.currentTime=logoTimes[i];});}
@@ -54,13 +60,14 @@ function render(){
  }else if(screen==='result'){
  app.innerHTML=resultUI(ctx)+demoControls();
  const proceed=()=>{stopEffects();screen='menu';selected=Math.min(selected+1,state().day);render();};
- $('#continue').onclick=()=>{playerName=$('#player-name').value.trim().slice(0,30);try{localStorage.setItem(storageKey+':name',playerName);}catch{}proceed();};
+ $('#continue').onclick=()=>{if(!appLaunch){playerName=$('#player-name').value.trim().slice(0,30);try{localStorage.setItem(storageKey+':name',playerName);}catch{}}proceed();};
  }else if(screen==='end'){
  app.innerHTML=endUI(ctx)+demoControls();$('#certificate').onclick=downloadCertificate;
  }else if(screen==='pause'){
  app.innerHTML=`<div class="screen utility-screen pause-screen"><button class="circle-button utility-back" id="back" aria-label="${t('exitMenu')}"><span class="back-arrow"></span></button><div class="center"><span class="large-note">Ⅱ</span><h1>${t('paused')}</h1><button class="primary" id="start">${t('resume')}</button></div></div>`;
  $('#start').onclick=resume;$('#back').onclick=()=>{stop();run=null;screen='menu';render();};
  }
+ if(appLaunch){const status=document.createElement('div');status.className='sync-status';status.setAttribute('role','status');status.textContent=t(syncStatus);if(syncStatus==='syncFailed'){const retry=document.createElement('button');retry.textContent=t('retry');retry.onclick=syncProgress;status.append(' ',retry);}(app.querySelector('.leaderboard')||app.querySelector('.end-screen'))?.append(status);}
  decorateScreen((screen==='menu' && enteringMenu)||(screen==='result' && enteringResult)||(screen==='end' && enteringEnd));
  if(params.has('demo')&&['result','end'].includes(screen)){
   const button=document.createElement('button');button.className='demo-effects';button.id='preview-effects';
@@ -150,9 +157,10 @@ function finish(){
  if(!run||run.finished)return;
  if(state().expired){stop();screen='end';render();return;}
  run.finished=true;scores=saveScore(scores,selected,run.score);
- try{localStorage.setItem(storageKey,JSON.stringify(scores));}catch{}
+ if(sync){sync.record(selected,run.score);scores=sync.state.scores;}else{try{localStorage.setItem(storageKey,JSON.stringify(scores));}catch{}}
+ if(api){syncStatus='syncing';syncProgress();}
  emit('gameCompleted',{day:selected,score:run.score,total:eventState(event,now(),scores).total});stop();screen='result';render();celebrate();
- if(state().ended)emit('eventCompleted',{total:state().total,tier:award(state().total,maximum()),language:lang});
+ if(state().ended)notifyCompletion();
 }
 function pause(){if(screen!=='game')return;audio?.pause();stopEffects();if(run?.countdown){run.countdownRemaining=Math.max(0,run.countdown-performance.now());run.countdown=null;}cancelAnimationFrame(frame);screen='pause';render();}
 async function resume(){if(!run)return;screen='game';gameView();if(run.tutorial){showTutorial();return;}if(!audio)return;for(const n of run.notes)n.el=null;try{if(run.countdownRemaining!=null){run.countdown=performance.now()+run.countdownRemaining;run.countdownRemaining=null;}else await audio.play();tick();}catch{pause();}}
@@ -167,11 +175,37 @@ function downloadCertificate(){
  canvas.toBlob(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`321playsy-${tier}-${lang}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);});
  emit('certificateRequested',{total:state().total,tier,language:lang});
 }
+function notifyCompletion(){
+ if(!completionEmitted){completionEmitted=true;emit('eventCompleted',{total:state().total,tier:award(state().total,maximum()),language:lang});}
+ if(sync&&!sync.state.completionSent&&!sync.state.completionPending){sync.markCompleted();syncProgress();}
+}
+async function syncProgress(){
+ if(!sync||syncInFlight)return syncInFlight;
+ const worker=sync,client=api;
+ syncStatus='syncing';
+ syncInFlight=(async()=>{
+  try{
+   await worker.flush();
+   // Refresh ranks after writes; never fabricate a rank for pending local scores.
+   for(let day=1;day<=7;day++){
+    const result=await client.getDay(day,tracks[day-1].notes.length*3);
+    boards[day]=result.rows;worker.merge(day,result.playerScore);
+   }
+   await worker.flush();
+   syncStatus='synced';
+  }catch{syncStatus='syncFailed';}
+  finally{syncInFlight=null;if(['menu','result','end'].includes(screen))render();}
+ })();
+ return syncInFlight;
+}
 async function boot(){
- screen='loading';render();
+ stop();event=null;scores={};boards={};api=null;sync=null;completionEmitted=false;screen='loading';render();
  try{
- const began=performance.now();event=await loadEvent(runtime,params);anchor=performance.now()-(performance.now()-began)/2;
- if(!Number.isFinite(event.serverNow)||!Number.isFinite(event.startsAt)||event.endsAt!==event.startsAt+7*86400000)throw Error('event contract');
+ launch=readLaunchContext(params,integrationConfig);
+ if(runtime.mode==='webview'&&!launch)throw Error('launch-required');
+ if(launch){lang=copy[launch.language]?launch.language:'ru';playerName=launch.playerName;}
+ const began=performance.now();const loadedEvent=launch?launchEvent(launch):await loadEvent(runtime,params);anchor=performance.now()-(performance.now()-began)/2;
+ if(!Number.isFinite(loadedEvent.serverNow)||!Number.isFinite(loadedEvent.startsAt)||!Number.isFinite(loadedEvent.endsAt)||loadedEvent.endsAt<=loadedEvent.startsAt)throw Error('event contract');
  const manifest=await fetch(assets+'tracks/manifest.json').then(r=>r.json());
  const folders=manifest.tracks.map(x=>typeof x==='string'?x:x.folder);
  // Avoid a burst of connections to the local prototype server on cold loads.
@@ -183,16 +217,27 @@ async function boot(){
  }
  tracks=loadedTracks;
  tracks.sort((a,b)=>a.day-b.day);
- storageKey='321playsy:'+event.id+':'+(window.PLAY321_CONTEXT?.playerId||'local');
- try{playerName=localStorage.getItem(storageKey+':name')||'';const saved=JSON.parse(localStorage.getItem(storageKey)||'{}');for(let d=1;d<=7;d++)if(Number.isInteger(saved[d])&&saved[d]>=0&&saved[d]<=tracks[d-1].notes.length*3)scores[d]=saved[d];}catch{}
- selected=Math.max(1,Math.min(state().day,Object.keys(scores).length+1));lastDay=state().day;screen=params.has('demo')&&['menu','result','end'].includes(params.get('screen'))?params.get('screen'):'menu';render();emit('ready',{language:lang,orientation:'portrait'});
- }catch(e){console.error(e);event=null;screen='error';render();}
+ storageKey=launch?progressKey(launch):'321playsy:'+loadedEvent.id+':'+(window.PLAY321_CONTEXT?.playerId||'local');
+ try{if(!launch)playerName=localStorage.getItem(storageKey+':name')||'';const saved=JSON.parse(localStorage.getItem(storageKey)||'{}');for(let d=1;d<=7;d++)if(Number.isInteger(saved[d])&&saved[d]>=0&&saved[d]<=tracks[d-1].notes.length*3)scores[d]=saved[d];}catch{}
+ if(launch&&integrationConfig.enabled){
+  api=createEventApi(integrationConfig,launch);
+  const storage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
+  sync=createProgressSync({api,storage,key:storageKey+':sync',maxScores:tracks.map(track=>track.notes.length*3)});
+  for(let day=1;day<=7;day++){const result=await api.getDay(day,tracks[day-1].notes.length*3);boards[day]=result.rows;sync.merge(day,result.playerScore);}
+  scores=sync.state.scores;syncStatus='synced';
+ }else syncStatus='local';
+ event=loadedEvent;
+ selected=Math.max(1,Math.min(state().day,Object.keys(scores).length+1));lastDay=state().day;screen=params.has('demo')&&['menu','result','end'].includes(params.get('screen'))?params.get('screen'):'menu';render();emit('ready',{language:lang,orientation:'portrait',integration:api?'api':launch?'local':'demo'});if(sync&&(Object.keys(sync.state.pending).length||sync.state.completionPending))syncProgress();
+ }catch{event=null;screen='error';render();}
 }
 window.addEventListener('keydown',e=>{if(e.repeat)return;if(e.code==='KeyQ'||e.code==='ArrowLeft')hit(0);if(e.code==='KeyW'||e.code==='ArrowRight')hit(1);});
 document.addEventListener('visibilitychange',async()=>{
  if(document.hidden){stopEffects();pause();return;}
- if(!event||runtime.mode==='static-demo')return;
+ if(!event)return;
+ if(launch){event.serverNow=Date.now();anchor=performance.now();updateTimer();syncProgress();return;}
+ if(runtime.mode==='static-demo')return;
  try{const began=performance.now();const response=await fetch('/api/event'+(params.has('demo')?'?day='+encodeURIComponent(params.get('day')||'1'):''),{cache:'no-store'});if(!response.ok)return;const fresh=await response.json();if(fresh.id===event.id&&Number.isFinite(fresh.serverNow)){event.serverNow=fresh.serverNow;anchor=performance.now()-(performance.now()-began)/2;updateTimer();}}catch{}
 });
+window.addEventListener('online',()=>syncProgress());
 const landscape=matchMedia('(orientation: landscape) and (max-height: 600px)');landscape.addEventListener('change',e=>{if(e.matches)pause();});
 setInterval(updateTimer,1000);boot();

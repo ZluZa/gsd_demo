@@ -13,3 +13,12 @@ const visualCopy={
  hi:{demoPlayer:'खिलाड़ी',you:'आप',demoRanking:'डेमो तालिका · लाइव रैंकिंग नहीं',getDiploma:'प्रमाणपत्र लें',preview:'लेआउट',menuPreview:'मेनू',resultPreview:'परिणाम',winPreview:'अंत'}
 };
 for(const language of Object.keys(copy))Object.assign(copy[language],visualCopy[language]);
+
+const integrationCopy={
+ ru:{local:'Результат сохранён на устройстве',syncing:'Сохраняем результат…',synced:'Результаты синхронизированы',syncFailed:'Не удалось обновить данные. Повтори синхронизацию.',serverRanking:'Рейтинг игроков',connectionError:'Не удалось подключить событие. Проверь подключение и открой игру из приложения заново.'},
+ en:{local:'Saved on this device',syncing:'Saving your result…',synced:'Results synchronized',syncFailed:'Could not update results. Retry synchronization.',serverRanking:'Player leaderboard',connectionError:'Could not connect to the event. Check your connection and reopen the game from the app.'},
+ fr:{local:'Enregistré sur cet appareil',syncing:'Enregistrement du résultat…',synced:'Résultats synchronisés',syncFailed:'Impossible de mettre à jour les résultats. Réessaie.',serverRanking:'Classement des joueurs',connectionError:'Connexion à l’événement impossible. Vérifie ta connexion et rouvre le jeu depuis l’application.'},
+ ar:{local:'محفوظ على الجهاز',syncing:'جارٍ حفظ النتيجة…',synced:'تمت مزامنة النتائج',syncFailed:'تعذر تحديث النتائج. حاول المزامنة مجددًا.',serverRanking:'ترتيب اللاعبين',connectionError:'تعذر الاتصال بالحدث. تحقق من الاتصال وأعد فتح اللعبة من التطبيق.'},
+ hi:{local:'इस डिवाइस पर सहेजा गया',syncing:'परिणाम सहेज रहे हैं…',synced:'परिणाम सिंक हो गए',syncFailed:'परिणाम अपडेट नहीं हुए। फिर सिंक करें।',serverRanking:'खिलाड़ियों की रैंकिंग',connectionError:'इवेंट से जुड़ नहीं पाए। कनेक्शन जाँचें और ऐप से गेम फिर खोलें।'},
+};
+for(const language of Object.keys(copy))Object.assign(copy[language],integrationCopy[language]);
